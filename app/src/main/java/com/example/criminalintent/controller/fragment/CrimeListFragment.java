@@ -23,6 +23,11 @@ import com.example.criminalintent.repository.CrimeRepository;
 import com.example.criminalintent.repository.IRepository;
 
 import java.util.List;
+import java.util.UUID;
+
+import static android.content.Intent.getIntent;
+import static android.content.Intent.getIntentOld;
+import static com.example.criminalintent.controller.activity.CrimeDetailActivity.EXTRA_CRIME_ID;
 
 public class CrimeListFragment extends Fragment {
 
@@ -89,6 +94,7 @@ public class CrimeListFragment extends Fragment {
             mRecyclerView.setAdapter(mCrimeAdapter);
         } else {
             mCrimeAdapter.notifyDataSetChanged();
+//            mCrimeAdapter.notifyItemChanged(mRepository.getPosition()]);
         }
     }
 

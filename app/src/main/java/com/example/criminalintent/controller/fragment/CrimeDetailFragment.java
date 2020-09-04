@@ -17,13 +17,18 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentStatePagerAdapter;
+import androidx.viewpager.widget.ViewPager;
 
 import com.example.criminalintent.R;
 import com.example.criminalintent.controller.activity.CrimeDetailActivity;
+import com.example.criminalintent.controller.activity.CrimePagerActivity;
 import com.example.criminalintent.model.Crime;
 import com.example.criminalintent.repository.CrimeRepository;
 import com.example.criminalintent.repository.IRepository;
 
+import java.util.List;
 import java.util.UUID;
 
 public class CrimeDetailFragment extends Fragment {
@@ -34,6 +39,14 @@ public class CrimeDetailFragment extends Fragment {
     private EditText mEditTextTitle;
     private Button mButtonDate;
     private CheckBox mCheckBoxSolved;
+
+    private Button mButtonNext;
+    private Button mButtonPrev;
+    private Button mButtonFirst;
+    private Button mButtonEnd;
+
+    private List<Crime> mCrimes;
+    private ViewPager mViewPager;
 
     private Crime mCrime;
     private IRepository mRepository;
@@ -150,6 +163,8 @@ public class CrimeDetailFragment extends Fragment {
         mEditTextTitle = view.findViewById(R.id.crime_title);
         mButtonDate = view.findViewById(R.id.crime_date);
         mCheckBoxSolved = view.findViewById(R.id.crime_solved);
+        mViewPager = view.findViewById(R.id.view_pager_crimes);
+
     }
 
     private void initViews() {
@@ -192,9 +207,12 @@ public class CrimeDetailFragment extends Fragment {
 
             }
         });
+
+
     }
 
     private void updateCrime() {
         mRepository.updateCrime(mCrime);
     }
+
 }

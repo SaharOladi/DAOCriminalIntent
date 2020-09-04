@@ -1,10 +1,52 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.viewpager2.widget.ViewPager2 xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/view_pager_crimes"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".controller.activity.CrimePagerActivity">
+    android:orientation="vertical">
 
-</androidx.viewpager2.widget.ViewPager2>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/button_end"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="END" />
+
+        <Button
+            android:id="@+id/button_prev"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="PREV" />
+
+        <Button
+            android:id="@+id/button_next"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="NEXT" />
+
+        <Button
+            android:id="@+id/button_first"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="FIRST" />
+    </LinearLayout>
+
+    <androidx.viewpager.widget.ViewPager
+        android:id="@+id/view_pager_crimes"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        tools:context=".controller.activity.CrimePagerActivity">
+
+    </androidx.viewpager.widget.ViewPager>
+
+</LinearLayout>
