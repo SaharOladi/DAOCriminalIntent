@@ -4,19 +4,21 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.criminalintent.R;
-import com.example.criminalintent.controller.activity.CrimeDetailActivity;
 import com.example.criminalintent.controller.activity.CrimePagerActivity;
 import com.example.criminalintent.model.Crime;
 import com.example.criminalintent.repository.CrimeRepository;
@@ -32,11 +34,13 @@ import static com.example.criminalintent.controller.activity.CrimeDetailActivity
 public class CrimeListFragment extends Fragment {
 
     public static final String TAG = "CLF";
+    public static final String BUNDLE_ARG_IS_SUBTITLE_VISIBLE = "isSubtitleVisible";
 
     private RecyclerView mRecyclerView;
     private CrimeAdapter mCrimeAdapter;
 
     private IRepository mRepository;
+    private boolean mIsSubtitleVisible = false;
 
     public static CrimeListFragment newInstance() {
 
@@ -55,7 +59,12 @@ public class CrimeListFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        setHasOptionsMenu(true);
         mRepository = CrimeRepository.getInstance();
+
+        if (savedInstanceState != null)
+            mIsSubtitleVisible =
+                    savedInstanceState.getBoolean(BUNDLE_ARG_IS_SUBTITLE_VISIBLE, false);
     }
 
     @Override
@@ -71,10 +80,49 @@ public class CrimeListFragment extends Fragment {
     }
 
     @Override
+    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+        inflater.inflate(R.menu.menu_cime_list, menu);
+
+        MenuItem item = menu.findItem(R.id.menu_item_subtitle);
+        setMenuItemSubtitle(item);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menu_item_add_crime:
+                Crime crime = new Crime();
+                CrimeRepository.getInstance().insertCrime(crime);
+
+                Intent intent = CrimePagerActivity.newIntent(getActivity(), crime.getId());
+                startActivity(intent);
+
+                return true;
+            case R.id.menu_item_subtitle:
+                mIsSubtitleVisible = !mIsSubtitleVisible;
+
+                updateSubtitle();
+                setMenuItemSubtitle(item);
+
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        outState.putBoolean(BUNDLE_ARG_IS_SUBTITLE_VISIBLE, mIsSubtitleVisible);
+    }
+
+    @Override
     public void onResume() {
         super.onResume();
 
         updateUI();
+        updateSubtitle();
     }
 
     private void findViews(View view) {
@@ -96,6 +144,21 @@ public class CrimeListFragment extends Fragment {
             mCrimeAdapter.notifyDataSetChanged();
 //            mCrimeAdapter.notifyItemChanged(mRepository.getPosition()]);
         }
+    }
+
+    private void updateSubtitle() {
+        int numberOfCrimes = CrimeRepository.getInstance().getCrimes().size();
+        String crimesText = mIsSubtitleVisible ? numberOfCrimes + " crimes" : null;
+
+        AppCompatActivity activity = (AppCompatActivity) getActivity();
+        activity.getSupportActionBar().setSubtitle(crimesText);
+    }
+
+    private void setMenuItemSubtitle(MenuItem item) {
+        item.setTitle(
+                mIsSubtitleVisible ?
+                        R.string.menu_item_hide_subtitle :
+                        R.string.menu_item_show_subtitle);
     }
 
     private class CrimeHolder extends RecyclerView.ViewHolder {

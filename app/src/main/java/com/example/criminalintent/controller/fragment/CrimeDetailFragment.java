@@ -1,6 +1,9 @@
 package com.example.criminalintent.controller.fragment;
 
+import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -12,41 +15,30 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentStatePagerAdapter;
-import androidx.viewpager.widget.ViewPager;
 
 import com.example.criminalintent.R;
-import com.example.criminalintent.controller.activity.CrimeDetailActivity;
-import com.example.criminalintent.controller.activity.CrimePagerActivity;
 import com.example.criminalintent.model.Crime;
 import com.example.criminalintent.repository.CrimeRepository;
 import com.example.criminalintent.repository.IRepository;
 
-import java.util.List;
+import java.util.Date;
 import java.util.UUID;
 
 public class CrimeDetailFragment extends Fragment {
 
     public static final String TAG = "CDF";
     public static final String ARGS_CRIME_ID = "crimeId";
+    public static final String FRAGMENT_TAG_DATE_PICKER = "DatePicker";
+    public static final int REQUEST_CODE_DATE_PICKER = 0;
 
     private EditText mEditTextTitle;
     private Button mButtonDate;
     private CheckBox mCheckBoxSolved;
-
-    private Button mButtonNext;
-    private Button mButtonPrev;
-    private Button mButtonFirst;
-    private Button mButtonEnd;
-
-    private List<Crime> mCrimes;
-    private ViewPager mViewPager;
 
     private Crime mCrime;
     private IRepository mRepository;
@@ -63,13 +55,6 @@ public class CrimeDetailFragment extends Fragment {
 
     public CrimeDetailFragment() {
         // Required empty public constructor
-    }
-
-    @Override
-    public void onAttach(@NonNull Context context) {
-        super.onAttach(context);
-
-        Log.d(TAG, "onAttach");
     }
 
     @Override
@@ -110,20 +95,6 @@ public class CrimeDetailFragment extends Fragment {
     }
 
     @Override
-    public void onStart() {
-        super.onStart();
-
-        Log.d(TAG, "onStart");
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-
-        Log.d(TAG, "onResume");
-    }
-
-    @Override
     public void onPause() {
         super.onPause();
         updateCrime();
@@ -132,46 +103,28 @@ public class CrimeDetailFragment extends Fragment {
     }
 
     @Override
-    public void onStop() {
-        super.onStop();
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        if (resultCode != Activity.RESULT_OK || data == null)
+            return;
 
-        Log.d(TAG, "onStop");
-    }
+        if (requestCode == REQUEST_CODE_DATE_PICKER) {
+            Date userSelectedDate =
+                    (Date) data.getSerializableExtra(DatePickerFragment.EXTRA_USER_SELECTED_DATE);
 
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-
-        Log.d(TAG, "onDestroyView");
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-
-        Log.d(TAG, "onDestroy");
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-
-        Log.d(TAG, "onDetach");
+            updateCrimeDate(userSelectedDate);
+        }
     }
 
     private void findViews(View view) {
         mEditTextTitle = view.findViewById(R.id.crime_title);
         mButtonDate = view.findViewById(R.id.crime_date);
         mCheckBoxSolved = view.findViewById(R.id.crime_solved);
-        mViewPager = view.findViewById(R.id.view_pager_crimes);
-
     }
 
     private void initViews() {
         mEditTextTitle.setText(mCrime.getTitle());
         mCheckBoxSolved.setChecked(mCrime.isSolved());
         mButtonDate.setText(mCrime.getDate().toString());
-        mButtonDate.setEnabled(false);
     }
 
     private void setListeners() {
@@ -204,15 +157,29 @@ public class CrimeDetailFragment extends Fragment {
         mButtonDate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                DatePickerFragment datePickerFragment =
+                        DatePickerFragment.newInstance(mCrime.getDate());
 
+                //create parent-child relations between CDF and DPF
+                datePickerFragment.setTargetFragment(
+                        CrimeDetailFragment.this,
+                        REQUEST_CODE_DATE_PICKER);
+
+                datePickerFragment.show(
+                        getActivity().getSupportFragmentManager(),
+                        FRAGMENT_TAG_DATE_PICKER);
             }
         });
-
-
     }
 
     private void updateCrime() {
         mRepository.updateCrime(mCrime);
     }
 
+    private void updateCrimeDate(Date userSelectedDate) {
+        mCrime.setDate(userSelectedDate);
+        updateCrime();
+
+        mButtonDate.setText(mCrime.getDate().toString());
+    }
 }
