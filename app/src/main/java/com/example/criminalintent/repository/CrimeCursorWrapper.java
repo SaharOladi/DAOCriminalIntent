@@ -3,11 +3,11 @@ package com.example.criminalintent.repository;
 import android.database.Cursor;
 import android.database.CursorWrapper;
 
-import com.example.criminalintent.database.CrimeDBSchema;
 import com.example.criminalintent.model.Crime;
 
 import java.util.Date;
 import java.util.UUID;
+
 import static com.example.criminalintent.database.CrimeDBSchema.CrimeTable.Cols;
 
 public class CrimeCursorWrapper extends CursorWrapper {
@@ -27,7 +27,8 @@ public class CrimeCursorWrapper extends CursorWrapper {
         Date date = new Date(getLong(getColumnIndex(Cols.DATE)));
         boolean solved = getInt(getColumnIndex(Cols.SOLVED)) == 0 ? false : true;
         String suspect = getString(getColumnIndex(Cols.SUSPECT));
+        String number = getString(getColumnIndex(Cols.NUMBER));
 
-        return new Crime(uuid, title, date, solved, suspect);
+        return new Crime(uuid, title, date, solved, suspect, number);
     }
 }

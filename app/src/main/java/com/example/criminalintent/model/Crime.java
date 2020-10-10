@@ -1,17 +1,50 @@
 package com.example.criminalintent.model;
 
-import com.example.criminalintent.utils.DateUtils;
+import androidx.room.ColumnInfo;
+import androidx.room.Entity;
+import androidx.room.PrimaryKey;
 
 import java.util.Date;
 import java.util.UUID;
 
+@Entity(tableName = "crimeTable")
 public class Crime {
+    @PrimaryKey(autoGenerate = true)
+    @ColumnInfo(name = "id")
+    private long primaryId;
 
+    public void setId(UUID id) {
+        mId = id;
+    }
+
+    @ColumnInfo(name = "uuid")
     private UUID mId;
+    @ColumnInfo(name = "title")
     private String mTitle;
+    @ColumnInfo(name = "date")
     private Date mDate;
+    @ColumnInfo(name = "solved")
     private boolean mSolved;
+    @ColumnInfo(name = "suspect")
     private String mSuspect;
+    @ColumnInfo(name = "phone number")
+    private String mNumber;
+
+    public long getPrimaryId() {
+        return primaryId;
+    }
+
+    public void setPrimaryId(long primaryId) {
+        this.primaryId = primaryId;
+    }
+
+    public String getNumber() {
+        return mNumber;
+    }
+
+    public void setNumber(String number) {
+        mNumber = number;
+    }
 
     public UUID getId() {
         return mId;
@@ -59,11 +92,12 @@ public class Crime {
         mDate = new Date();
     }
 
-    public Crime(UUID id, String title, Date date, boolean solved, String suspect) {
+    public Crime(UUID id, String title, Date date, boolean solved, String suspect, String number) {
         mId = id;
         mTitle = title;
         mDate = date;
         mSolved = solved;
         mSuspect = suspect;
+        mNumber = number;
     }
 }

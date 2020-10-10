@@ -2,25 +2,24 @@ package com.example.criminalintent.repository;
 
 import android.content.ContentValues;
 import android.content.Context;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 
-import com.example.criminalintent.database.CrimeDBHelper;
-import com.example.criminalintent.database.CrimeDBSchema;
+import androidx.room.Room;
+
+import com.example.criminalintent.database.CrimeDAO;
+import com.example.criminalintent.database.CrimeDataBase;
 import com.example.criminalintent.model.Crime;
 
-import static com.example.criminalintent.database.CrimeDBSchema.CrimeTable.Cols;
-
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+
+import static com.example.criminalintent.database.CrimeDBSchema.CrimeTable.Cols;
 
 public class CrimeDBRepository implements IRepository {
 
     private static CrimeDBRepository sInstance;
 
-    private SQLiteDatabase mDatabase;
+//    private SQLiteDatabase mDatabase;
+    private CrimeDAO mCrimeDAO;
     private Context mContext;
 
     public static CrimeDBRepository getInstance(Context context) {
@@ -32,87 +31,104 @@ public class CrimeDBRepository implements IRepository {
 
     private CrimeDBRepository(Context context) {
         mContext = context.getApplicationContext();
-        CrimeDBHelper crimeDBHelper = new CrimeDBHelper(mContext);
 
-        //all 4 checks happens on getDataBase
-        mDatabase = crimeDBHelper.getWritableDatabase();
+        CrimeDataBase crimeDataBase = Room.databaseBuilder(mContext,
+                CrimeDataBase.class,
+                "crime.db")
+                .allowMainThreadQueries()
+                .build();
+        // dao is interface, so you should create database first and then get database.
+        mCrimeDAO = crimeDataBase.getCrimeDataBaseDAO();
+
+//        CrimeDBHelper crimeDBHelper = new CrimeDBHelper(mContext);
+//
+//        //all 4 checks happens on getDataBase
+//        mDatabase = crimeDBHelper.getWritableDatabase();
+
     }
 
     @Override
     public List<Crime> getCrimes() {
-        List<Crime> crimes = new ArrayList<>();
-
-        CrimeCursorWrapper crimeCursorWrapper = queryCrimeCursor(null, null);
-
-        if (crimeCursorWrapper == null || crimeCursorWrapper.getCount() == 0)
-            return crimes;
-
-        try {
-            crimeCursorWrapper.moveToFirst();
-
-            while (!crimeCursorWrapper.isAfterLast()) {
-                crimes.add(crimeCursorWrapper.getCrime());
-                crimeCursorWrapper.moveToNext();
-            }
-        } finally {
-            crimeCursorWrapper.close();
-        }
-
-        return crimes;
+         return mCrimeDAO.getCrimes();
+//        List<Crime> crimes = new ArrayList<>();
+//
+//        CrimeCursorWrapper crimeCursorWrapper = queryCrimeCursor(null, null);
+//
+//        if (crimeCursorWrapper == null || crimeCursorWrapper.getCount() == 0)
+//            return crimes;
+//
+//        try {
+//            crimeCursorWrapper.moveToFirst();
+//
+//            while (!crimeCursorWrapper.isAfterLast()) {
+//                crimes.add(crimeCursorWrapper.getCrime());
+//                crimeCursorWrapper.moveToNext();
+//            }
+//        } finally {
+//            crimeCursorWrapper.close();
+//        }
+//
+//        return crimes;
     }
 
     @Override
     public Crime getCrime(UUID crimeId) {
-        String where = Cols.UUID + " = ?";
-        String[] whereArgs = new String[]{crimeId.toString()};
 
-        CrimeCursorWrapper crimeCursorWrapper = queryCrimeCursor(where, whereArgs);
-
-        if (crimeCursorWrapper == null || crimeCursorWrapper.getCount() == 0)
-            return null;
-
-        try {
-            crimeCursorWrapper.moveToFirst();
-            return crimeCursorWrapper.getCrime();
-        } finally {
-            crimeCursorWrapper.close();
-        }
+        return mCrimeDAO.getCrime(crimeId);
+//        String where = Cols.UUID + " = ?";
+//        String[] whereArgs = new String[]{crimeId.toString()};
+//
+//        CrimeCursorWrapper crimeCursorWrapper = queryCrimeCursor(where, whereArgs);
+//
+//        if (crimeCursorWrapper == null || crimeCursorWrapper.getCount() == 0)
+//            return null;
+//
+//        try {
+//            crimeCursorWrapper.moveToFirst();
+//            return crimeCursorWrapper.getCrime();
+//        } finally {
+//            crimeCursorWrapper.close();
+//        }
     }
 
-    private CrimeCursorWrapper queryCrimeCursor(String where, String[] whereArgs) {
-        Cursor cursor = mDatabase.query(
-                CrimeDBSchema.CrimeTable.NAME,
-                null,
-                where,
-                whereArgs,
-                null,
-                null,
-                null);
-
-        CrimeCursorWrapper crimeCursorWrapper = new CrimeCursorWrapper(cursor);
-        return crimeCursorWrapper;
-    }
+//    private CrimeCursorWrapper queryCrimeCursor(String where, String[] whereArgs) {
+//        Cursor cursor = mDatabase.query(
+//                CrimeDBSchema.CrimeTable.NAME,
+//                null,
+//                where,
+//                whereArgs,
+//                null,
+//                null,
+//                null);
+//
+//        CrimeCursorWrapper crimeCursorWrapper = new CrimeCursorWrapper(cursor);
+//        return crimeCursorWrapper;
+//    }
 
     @Override
     public void insertCrime(Crime crime) {
-        ContentValues values = getContentValues(crime);
-        mDatabase.insert(CrimeDBSchema.CrimeTable.NAME, null, values);
+        mCrimeDAO.insertCrime(crime);
+//        ContentValues values = getContentValues(crime);
+//        mDatabase.insert(CrimeDBSchema.CrimeTable.NAME, null, values);
     }
 
     @Override
     public void updateCrime(Crime crime) {
-        ContentValues values = getContentValues(crime);
-        String whereClause = Cols.UUID + " = ?";
-        String[] whereArgs = new String[]{crime.getId().toString()};
-        mDatabase.update(CrimeDBSchema.CrimeTable.NAME, values, whereClause, whereArgs);
+        mCrimeDAO.updateCrime(crime);
+//        ContentValues values = getContentValues(crime);
+//        String whereClause = Cols.UUID + " = ?";
+//        String[] whereArgs = new String[]{crime.getId().toString()};
+//        mDatabase.update(CrimeDBSchema.CrimeTable.NAME, values, whereClause, whereArgs);
     }
 
     @Override
     public void deleteCrime(Crime crime) {
-        String whereClause = Cols.UUID + " = ?";
-        String[] whereArgs = new String[]{crime.getId().toString()};
-        mDatabase.delete(CrimeDBSchema.CrimeTable.NAME, whereClause, whereArgs);
+        mCrimeDAO.deleteCrime(crime);
     }
+//        String whereClause = Cols.UUID + " = ?";
+//        String[] whereArgs = new String[]{crime.getId().toString()};
+//        mDatabase.delete(CrimeDBSchema.CrimeTable.NAME, whereClause, whereArgs);
+//    }}
 
     @Override
     public int getPosition(UUID crimeId) {

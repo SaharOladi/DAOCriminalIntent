@@ -25,11 +25,7 @@ import com.example.criminalintent.repository.CrimeDBRepository;
 import com.example.criminalintent.repository.IRepository;
 
 import java.util.List;
-import java.util.UUID;
 
-import static android.content.Intent.getIntent;
-import static android.content.Intent.getIntentOld;
-import static com.example.criminalintent.controller.activity.CrimeDetailActivity.EXTRA_CRIME_ID;
 
 public class CrimeListFragment extends Fragment {
 

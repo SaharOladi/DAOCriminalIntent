@@ -18,6 +18,7 @@ import android.widget.CompoundButton;
 import android.widget.EditText;
 
 import androidx.annotation.Nullable;
+import androidx.core.app.ShareCompat;
 import androidx.fragment.app.Fragment;
 
 import com.example.criminalintent.R;
@@ -42,6 +43,9 @@ public class CrimeDetailFragment extends Fragment {
     private CheckBox mCheckBoxSolved;
     private Button mButtonSuspect;
     private Button mButtonReport;
+
+    private Button mButtonDial;
+    private Button mButtonCall;
 
     private Crime mCrime;
     private IRepository mRepository;
@@ -117,8 +121,10 @@ public class CrimeDetailFragment extends Fragment {
             updateCrimeDate(userSelectedDate);
         } else if (requestCode == REQUEST_CODE_SELECT_CONTACT) {
             Uri contactUri = intent.getData();
-
-            String[] projection = new String[]{ContactsContract.Contacts.DISPLAY_NAME};
+//                    intent.getData();
+//            ContactsContract.Contacts.DISPLAY_NAME
+            String[] projection = new String[]{ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+                    ContactsContract.CommonDataKinds.Phone.NUMBER};
             Cursor cursor = getActivity().getContentResolver().query(
                     contactUri,
                     projection,
@@ -132,9 +138,14 @@ public class CrimeDetailFragment extends Fragment {
             try {
                 cursor.moveToFirst();
 
-                String suspect = cursor.getString(0);
+                String suspect = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
+                String number = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
                 mCrime.setSuspect(suspect);
+                mCrime.setNumber(number);
                 mButtonSuspect.setText(suspect);
+                mButtonDial.setText(suspect + " " + number);
+                mButtonCall.setText(suspect + " " + number);
+
             } finally {
                 cursor.close();
             }
@@ -147,15 +158,27 @@ public class CrimeDetailFragment extends Fragment {
         mCheckBoxSolved = view.findViewById(R.id.crime_solved);
         mButtonSuspect = view.findViewById(R.id.choose_suspect);
         mButtonReport = view.findViewById(R.id.send_report);
+        mButtonCall = view.findViewById(R.id.call_contact_btn);
+        mButtonDial = view.findViewById(R.id.dial_contact_btn);
+
     }
 
     private void initViews() {
         mEditTextTitle.setText(mCrime.getTitle());
         mCheckBoxSolved.setChecked(mCrime.isSolved());
         mButtonDate.setText(mCrime.getDate().toString());
+        if (mCrime.getSuspect() == null){
+            mButtonDial.setEnabled(false);
+            mButtonCall.setEnabled(false);
 
-        if (mCrime.getSuspect() != null)
+        }
+        if (mCrime.getSuspect() != null){
+
             mButtonSuspect.setText(mCrime.getSuspect());
+            mButtonDial.setText(mCrime.getSuspect() + mCrime.getNumber());
+            mButtonCall.setText(mCrime.getSuspect() + mCrime.getNumber());
+        }
+
     }
 
     private void setListeners() {
@@ -205,7 +228,10 @@ public class CrimeDetailFragment extends Fragment {
         mButtonSuspect.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                mButtonDial.setEnabled(true);
+                mButtonCall.setEnabled(true);
                 selectContact();
+
             }
         });
 
@@ -213,6 +239,22 @@ public class CrimeDetailFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 shareReportIntent();
+            }
+        });
+        mButtonCall.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent dialIntent = new Intent(Intent.ACTION_DIAL);
+                dialIntent.setData(Uri.parse("tel:"+ mCrime.getNumber()));//change the number
+                startActivity(dialIntent);
+            }
+        });
+        mButtonDial.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent callIntent = new Intent(Intent.ACTION_CALL);
+                callIntent.setData(Uri.parse("tel:"+ mCrime.getNumber()));//change the number
+                startActivity(callIntent);
             }
         });
     }
@@ -252,25 +294,42 @@ public class CrimeDetailFragment extends Fragment {
         return report;
     }
 
-    private void shareReportIntent() {
-        Intent sendIntent = new Intent(Intent.ACTION_SEND);
-        sendIntent.putExtra(Intent.EXTRA_TEXT, getReport());
-        sendIntent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.crime_report_subject));
-        sendIntent.setType("text/plain");
 
-        Intent shareIntent =
-                Intent.createChooser(sendIntent, getString(R.string.send_report));
+    private void shareReportIntent() {
+
+        Intent intentBuilder = ShareCompat.IntentBuilder.from(getActivity())
+                .setType("text/plain")
+                .setText(getReport())
+                .createChooserIntent();
+
+        if (intentBuilder.resolveActivity(getActivity().getPackageManager()) != null) {
+            startActivity(intentBuilder);
+        }
+
+
+//        Intent sendIntent = new Intent(Intent.ACTION_SEND);
+//        sendIntent.putExtra(Intent.EXTRA_TEXT, getReport());
+//        sendIntent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.crime_report_subject));
+//        sendIntent.setType("text/plain");
+//
+//        Intent shareIntent =
+//                Intent.createChooser(sendIntent, getString(R.string.send_report));
 
         //we prevent app from crash if the intent has no destination.
-        if (sendIntent.resolveActivity(getActivity().getPackageManager()) != null)
-            startActivity(shareIntent);
+//        if (sendIntent.resolveActivity(getActivity().getPackageManager()) != null)
+//            startActivity(shareIntent);
     }
 
     private void selectContact() {
         Intent intent = new Intent(Intent.ACTION_PICK);
-        intent.setType(ContactsContract.Contacts.CONTENT_TYPE);
+        intent.setType(ContactsContract.CommonDataKinds.Phone.CONTENT_TYPE);
+
+//        intent.setType(ContactsContract.Contacts.CONTENT_TYPE);
+
         if (intent.resolveActivity(getActivity().getPackageManager()) != null) {
             startActivityForResult(intent, REQUEST_CODE_SELECT_CONTACT);
         }
+        updateCrime();
+
     }
 }
